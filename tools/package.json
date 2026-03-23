@@ -1,0 +1,16 @@
+{
+  "name": "plp-lighthouse-tools",
+  "version": "1.0.0",
+  "description": "Puppeteer-based Lighthouse runner for PLP performance audits",
+  "main": "lighthouse-runner.js",
+  "scripts": {
+    "audit": "node lighthouse-runner.js"
+  },
+  "dependencies": {
+    "lighthouse": "^12.0.0",
+    "puppeteer": "^24.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

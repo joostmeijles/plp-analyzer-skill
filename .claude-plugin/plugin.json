@@ -1,0 +1,5 @@
+{
+  "name": "plp-agent-analyzer",
+  "description": "Finds and ranks Product Listing Pages for ecommerce sites",
+  "version": "0.1.0"
+}

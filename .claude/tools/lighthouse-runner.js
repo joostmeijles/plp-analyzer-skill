@@ -315,6 +315,110 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ── Bot protection detection ──────────────────────────────────────────────────
+
+/**
+ * Detects whether the page is blocked by a bot protection / WAF system.
+ *
+ * Checks (in order):
+ *   1. HTTP response status (403, 429, 503)
+ *   2. Final URL after redirects (DataDome, Akamai redirects)
+ *   3. Page title + body content fingerprints for known systems
+ *
+ * @param {Page}     page      Puppeteer Page (after navigation)
+ * @param {Response} response  Puppeteer HTTPResponse from page.goto()
+ * @returns {{ detected: boolean, system: string|null, details: string|null }}
+ */
+async function detectBotProtection(page, response) {
+  // 1. HTTP status
+  const status = response ? response.status() : null;
+  if (status === 403 || status === 429 || status === 503) {
+    return {
+      detected: true,
+      system: `HTTP ${status}`,
+      details: `Server returned HTTP ${status}`,
+    };
+  }
+
+  // 2. Final URL after redirects (DataDome, Akamai redirect to external challenge pages)
+  const finalUrl = page.url();
+  if (/captcha-delivery\.com|geo\.captcha/.test(finalUrl)) {
+    return { detected: true, system: 'DataDome', details: `Redirected to: ${finalUrl}` };
+  }
+  if (/akamaiedge\.net\/captcha/.test(finalUrl)) {
+    return { detected: true, system: 'Akamai', details: `Redirected to: ${finalUrl}` };
+  }
+
+  // 3. Page content fingerprints
+  const result = await page.evaluate(() => {
+    const title = (document.title || '').trim();
+    const titleLc = title.toLowerCase();
+    const bodyHtml = (document.body && document.body.innerHTML) || '';
+    const bodyHtmlLc = bodyHtml.toLowerCase();
+
+    // Cloudflare — challenge / IUAM page or 1020 Access Denied
+    if (
+      titleLc === 'just a moment...' ||
+      titleLc.startsWith('just a moment') ||
+      bodyHtml.includes('cf-browser-verification') ||
+      bodyHtml.includes('cf_captcha_kind') ||
+      bodyHtml.includes('cloudflare-challenge') ||
+      bodyHtml.includes('cf_chl_form') ||
+      (titleLc.includes('attention required') && bodyHtmlLc.includes('cloudflare'))
+    ) {
+      return { system: 'Cloudflare', details: `Title: "${title}"` };
+    }
+
+    // PerimeterX (now HUMAN Security)
+    if (
+      bodyHtml.includes('_pxCaptcha') ||
+      bodyHtml.includes('px-block-page') ||
+      bodyHtmlLc.includes('perimeterx') ||
+      bodyHtml.includes('human.security')
+    ) {
+      return { system: 'PerimeterX/HUMAN', details: `Title: "${title}"` };
+    }
+
+    // Imperva / Incapsula
+    if (bodyHtmlLc.includes('incapsula') || bodyHtml.includes('_Incap_Session_')) {
+      return { system: 'Imperva/Incapsula', details: `Title: "${title}"` };
+    }
+
+    // Akamai Bot Manager
+    if (bodyHtml.includes('akam-sw') || bodyHtml.includes('akamai-captcha')) {
+      return { system: 'Akamai', details: `Title: "${title}"` };
+    }
+
+    // DataDome (inline injection without redirect)
+    if (bodyHtmlLc.includes('datadome') && titleLc.includes('access denied')) {
+      return { system: 'DataDome', details: `Title: "${title}"` };
+    }
+
+    // Generic: titles that unambiguously indicate blocking
+    if (
+      titleLc === 'access denied' ||
+      titleLc === '403 forbidden' ||
+      titleLc === '429 too many requests' ||
+      titleLc === '503 service unavailable' ||
+      titleLc.includes('robot check') ||
+      titleLc.includes('security check') ||
+      titleLc.includes('are you human') ||
+      titleLc.includes('prove you are human') ||
+      titleLc.includes('ddos-guard') ||
+      (titleLc.includes('captcha') && !titleLc.includes('recaptcha'))
+    ) {
+      return { system: 'Unknown', details: `Title: "${title}"` };
+    }
+
+    return null;
+  });
+
+  if (result) {
+    return { detected: true, system: result.system, details: result.details };
+  }
+  return { detected: false, system: null, details: null };
+}
+
 // ── Lighthouse runner ─────────────────────────────────────────────────────────
 
 const MOBILE_EMULATION = {
@@ -352,6 +456,7 @@ async function auditUrl(url, browser, outputDir, sitename, index) {
   let cookieBanner = 'No cookie banner found';
   let screenshotPath = null;
   let cookieHeader = '';
+  let botProtection = { detected: false, system: null, details: null };
 
   const page = await browser.newPage();
   try {
@@ -367,7 +472,15 @@ async function auditUrl(url, browser, outputDir, sitename, index) {
     });
 
     // networkidle2 ensures async CMP scripts (Cookiebot, OneTrust) have finished injecting
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
+    const response = await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
+
+    // Detect bot protection before doing anything else with the page
+    botProtection = await detectBotProtection(page, response);
+    if (botProtection.detected) {
+      process.stderr.write(
+        `  ⚠ Bot protection detected: ${botProtection.system} — ${botProtection.details}\n`
+      );
+    }
 
     // Attempt banner dismissal (main frame + all iframes)
     cookieBanner = await dismissCookieBanner(page);
@@ -446,7 +559,7 @@ async function auditUrl(url, browser, outputDir, sitename, index) {
     scriptFiles,
   };
 
-  return { cookieBanner, screenshotPath, metrics };
+  return { cookieBanner, botProtection, screenshotPath, metrics };
 }
 
 // ── CLI entry point ───────────────────────────────────────────────────────────
@@ -501,10 +614,11 @@ async function main() {
       process.stderr.write(`[${i + 1}/${urls.length}] Auditing: ${url}\n`);
 
       try {
-        const { cookieBanner, screenshotPath, metrics } = await auditUrl(url, browser, outputDir, sitename, i);
+        const { cookieBanner, botProtection, screenshotPath, metrics } = await auditUrl(url, browser, outputDir, sitename, i);
         process.stderr.write(`  Cookie banner: ${cookieBanner}\n`);
+        process.stderr.write(`  Bot protection: ${botProtection.detected ? `⚠ ${botProtection.system}` : 'none'}\n`);
         process.stderr.write(`  Score: ${metrics.score} | LCP: ${metrics.lcp_ms}ms | TBT: ${metrics.tbt_ms}ms\n`);
-        results.push({ url, status: 'ok', cookieBanner, screenshotPath, lighthouse: metrics });
+        results.push({ url, status: 'ok', cookieBanner, botProtection, screenshotPath, lighthouse: metrics });
       } catch (err) {
         process.stderr.write(`  Error: ${err.message}\n`);
         results.push({ url, status: 'error', errorMessage: err.message, screenshotPath: null, lighthouse: null });

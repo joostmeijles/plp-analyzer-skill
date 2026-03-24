@@ -10,8 +10,9 @@ You are an agent that runs Lighthouse mobile performance audits on Product Listi
 **Approach:**
 1. Run `tools/lighthouse-runner.js` — a Puppeteer-based tool that, for each URL:
    - Launches a headless Chromium browser
-   - Navigates to the URL and dismisses the cookie/GDPR consent banner via layered heuristics
-   - Takes a screenshot for visual verification of banner state
+   - Navigates to the URL and checks for bot protection / WAF blocking (Cloudflare challenge, PerimeterX, DataDome, Imperva, HTTP 403/429/503, etc.)
+   - Dismisses the cookie/GDPR consent banner via layered heuristics
+   - Takes a screenshot for visual verification of banner state and bot protection status
    - Harvests consent cookies and injects them into Lighthouse via `extraHeaders`
    - Runs a Lighthouse mobile audit (Performance + SEO categories) using the same Chrome instance
 2. Parse the JSON output and generate a structured markdown report.
@@ -60,6 +61,11 @@ The tool outputs a JSON array to stdout. Each entry:
   "url": "https://example.com/collections/shoes",
   "status": "ok",
   "cookieBanner": "Clicked: Accept all cookies",
+  "botProtection": {
+    "detected": false,
+    "system": null,
+    "details": null
+  },
   "screenshotPath": "temp/screenshot-sitename-0.png",
   "lighthouse": {
     "score": 62,
@@ -92,7 +98,11 @@ The tool outputs a JSON array to stdout. Each entry:
 }
 ```
 
-**Note:** `inp_ms` is always `null` and is ignored. Use `tbt_ms` as the interactivity metric in all report sections. `scriptFiles` contains one entry per individual JS file loaded by the page (from the Lighthouse `network-requests` audit), sorted by size descending — use this to report individual bundle sizes rather than the aggregate `resources.scripts` total.
+**Notes:**
+- `inp_ms` is always `null` and is ignored. Use `tbt_ms` as the interactivity metric in all report sections.
+- `scriptFiles` contains one entry per individual JS file loaded by the page (from the Lighthouse `network-requests` audit), sorted by size descending — use this to report individual bundle sizes rather than the aggregate `resources.scripts` total.
+- `botProtection.detected: true` means the Puppeteer navigation encountered a bot protection page. The Lighthouse metrics for that URL may be unreliable (reflecting the challenge page rather than the actual PLP). Flag these pages clearly in the report.
+- **`botProtection` is detected on the Puppeteer pre-navigation only** (before the banner dismissal). Lighthouse does its own fresh navigation — if the tool was blocked during Lighthouse's navigation the metrics will appear anomalously low (near-zero requests, very low page weight, tiny LCP). Cross-check: if `resources.total.requests < 10` and `pageWeight_bytes < 100000` the Lighthouse run was likely also blocked.
 
 ---
 
@@ -130,15 +140,16 @@ Follow the structure defined in `references/report-format.md` exactly:
 The report is written in **Dutch**. Follow the section order and Dutch headings defined in `references/report-format.md` exactly:
 
 1. **Managementsamenvatting** — fixed Dutch template (fill in sitename, median score, median LCP in seconds): "De website van [bedrijfsnaam] scoort momenteel een [score] op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ([x] sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet."
-2. **Samenvatting** — 3–5 Dutch sentences describing overall website health: performance score, LCP, TBT, CLS, page weight, and the most important bottleneck
+2. **Samenvatting** — 3–5 Dutch sentences describing overall website health: performance score, LCP, TBT, CLS, page weight, and the most important bottleneck. If any pages had bot protection detected, mention it here.
 3. **Algemene gezondheid** — median Performance Score, median SEO Score, median page weight, pages analyzed
-4. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
-5. **Core Web Vitals per pagina** — one row per page: Score, LCP, CLS, TBT, Status
-6. **Laadtijddetails** — per-page TTFB, FCP, Speed Index, TBT + median row
-7. **Paginagewicht** — median page weight and requests
-8. **Resourceverdeling per pagina** — per-page resource table (Total, Scripts, Images, CSS, Fonts, Docs, Other); use `resources.*` totals for all columns except Scripts — for Scripts show the aggregate count/bytes from `resources.scripts` with a note that the breakdown follows
-9. **JavaScript-bestanden per pagina** — for each page, list the individual JS files from `scriptFiles` (URL shortened to filename or domain, size in KB); show top 10 per page sorted by size descending; include a column for first-party vs third-party (third-party = different origin than the audited URL)
-10. **Aanbevelingen** — Hoge prioriteit and Gemiddelde prioriteit, derived from the worst metrics
+4. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
+5. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
+6. **Core Web Vitals per pagina** — one row per page: Score, LCP, CLS, TBT, Bot-check, Status. Bot-check column: ✅ for `detected: false`, ⚠ + system name for `detected: true`.
+7. **Laadtijddetails** — per-page TTFB, FCP, Speed Index, TBT + median row
+8. **Paginagewicht** — median page weight and requests
+9. **Resourceverdeling per pagina** — per-page resource table (Total, Scripts, Images, CSS, Fonts, Docs, Other); use `resources.*` totals for all columns except Scripts — for Scripts show the aggregate count/bytes from `resources.scripts` with a note that the breakdown follows
+10. **JavaScript-bestanden per pagina** — for each page, list the individual JS files from `scriptFiles` (URL shortened to filename or domain, size in KB); show top 10 per page sorted by size descending; include a column for first-party vs third-party (third-party = different origin than the audited URL)
+11. **Aanbevelingen** — Hoge prioriteit and Gemiddelde prioriteit, derived from the worst metrics
 
 After writing, print:
 `Rapport opgeslagen als {filePath}. {N} URL's geaudit ({errors} fouten). Mediaan performancescore: {value}, Mediaan LCP: {value}ms.`

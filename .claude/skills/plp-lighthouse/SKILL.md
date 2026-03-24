@@ -111,22 +111,22 @@ The tool outputs a JSON array to stdout. Each entry:
 Compute across all URLs with `status: ok`:
 
 ### Performance & SEO
-- Median and mean **Performance Score** (0–100)
-- Median and mean **SEO Score** (0–100) — used as Discoverability Score
+- Mean **Performance Score** (0–100)
+- Mean **SEO Score** (0–100) — used as Discoverability Score
 
 ### Core Web Vitals
-- Median and mean **LCP** (ms) — Good ≤ 2500, NI 2500–4000, Poor > 4000
-- Median and mean **CLS** — Good ≤ 0.1, NI 0.1–0.25, Poor > 0.25
-- Median and mean **TBT** (ms) — Good ≤ 200, NI 200–600, Poor > 600
+- Mean **LCP** (ms) — Good ≤ 2500, NI 2500–4000, Poor > 4000
+- Mean **CLS** — Good ≤ 0.1, NI 0.1–0.25, Poor > 0.25
+- Mean **TBT** (ms) — Good ≤ 200, NI 200–600, Poor > 600
 - Pass rates (Good / Needs Improvement / Poor) for each metric
 
 ### Load Timing
-- Median and mean **TTFB** (ms), **FCP** (ms), **Speed Index** (ms), **TBT** (ms)
+- Mean **TTFB** (ms), **FCP** (ms), **Speed Index** (ms), **TBT** (ms)
 - Thresholds: FCP Good ≤ 1800, NI 1800–3000, Poor > 3000 | SI Good ≤ 3400, NI 3400–5800, Poor > 5800 | TBT Good ≤ 200, NI 200–600, Poor > 600
 
 ### Page Weight
-- Median **page weight** in MB (from `pageWeight_bytes`)
-- Median **total requests** (from `resources.total.requests`)
+- Mean **page weight** in MB (from `pageWeight_bytes`)
+- Mean **total requests** (from `resources.total.requests`)
 - Per-page resource breakdown (scripts, images, CSS, fonts, docs, other) in KB or MB
 
 ---
@@ -139,8 +139,8 @@ Follow the structure defined in `references/report-format.md` exactly:
 
 The report is written in **Dutch**. Follow the section order and Dutch headings defined in `references/report-format.md` exactly:
 
-1. **Managementsamenvatting** — fixed Dutch template (fill in sitename, median score, median LCP in seconds): "De website van [bedrijfsnaam] scoort momenteel een [score] op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ([x] sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet."
-2. **Samenvatting** — 3–5 Dutch sentences describing overall website health: performance score, LCP, TBT, CLS, page weight, and the most important bottleneck. If any pages had bot protection detected, mention it here.
+1. **Managementsamenvatting** — fixed Dutch template (fill in sitename, mean score, mean LCP in seconds): "De website van [bedrijfsnaam] scoort momenteel een [score] op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ([x] sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet."
+2. **Samenvatting** — 3–5 Dutch sentences describing overall website health: mean performance score, mean LCP (incl. rating), mean TBT (incl. rating), mean CLS, page weight, and the most important bottleneck. If any pages had bot protection detected, mention it here.
 3. **Algemene gezondheid** — median Performance Score, median SEO Score, median page weight, pages analyzed
 4. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
 5. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
@@ -152,7 +152,7 @@ The report is written in **Dutch**. Follow the section order and Dutch headings 
 11. **Aanbevelingen** — Hoge prioriteit and Gemiddelde prioriteit, derived from the worst metrics
 
 After writing, print:
-`Rapport opgeslagen als {filePath}. {N} URL's geaudit ({errors} fouten). Mediaan performancescore: {value}, Mediaan LCP: {value}ms.`
+`Rapport opgeslagen als {filePath}. {N} URL's geaudit ({errors} fouten). Gemiddelde performancescore: {value}, Gemiddeld LCP: {value}ms.`
 
 ---
 

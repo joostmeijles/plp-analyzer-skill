@@ -23,13 +23,13 @@ Opgeslagen in de map `reports/` (of de map die de gebruiker opgeeft).
 
 ## Managementsamenvatting
 
-De website van {bedrijfsnaam} scoort momenteel een {mediaan score} op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ({mediaan LCP in seconden, 1 decimaal} sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet.
+De website van {bedrijfsnaam} scoort momenteel een {gemiddelde score} op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ({gemiddeld LCP in seconden, 1 decimaal} sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet.
 
 ---
 
 ## Samenvatting
 
-{3–5 Nederlandstalige zinnen die de algehele websitegesteldheid beschrijven. Vermeld ten minste: de mediaan performancescore, de mediaan LCP (inclusief beoordeling Goed/Verbetering nodig/Slecht), de mediaan TBT (inclusief beoordeling), de mediaan CLS, het paginagewicht, en het belangrijkste knelpunt dat als eerste aangepakt moet worden. Schrijf zakelijk en bondig.}
+{3–5 Nederlandstalige zinnen die de algehele websitegesteldheid beschrijven. Vermeld ten minste: de gemiddelde performancescore, het gemiddelde LCP (inclusief beoordeling Goed/Verbetering nodig/Slecht), het gemiddelde TBT (inclusief beoordeling), het gemiddelde CLS, het paginagewicht, en het belangrijkste knelpunt dat als eerste aangepakt moet worden. Schrijf zakelijk en bondig.}
 
 ---
 
@@ -42,18 +42,18 @@ De website van {bedrijfsnaam} scoort momenteel een {mediaan score} op performanc
 | Gemiddeld paginagewicht | X,X MB |
 | Geanalyseerde pagina's | N |
 
-> Scores zijn de **mediaan** over alle geauditeerde pagina's. Paginagewicht is de gecomprimeerde
+> Scores zijn het **gemiddelde** over alle geauditeerde pagina's. Paginagewicht is de gecomprimeerde
 > (overgedragen) grootte zoals gerapporteerd door Lighthouse.
 
 ---
 
 ## Core Web Vitals
 
-| Metriek | Mediaan | Gemiddelde | Goed | Verbetering nodig | Slecht | Drempelwaarde |
-|---------|---------|------------|------|-------------------|--------|---------------|
-| LCP (ms) | 0000 | 0000 | X% | X% | X% | ≤ 2500 ms |
-| CLS | 0,00 | 0,00 | X% | X% | X% | ≤ 0,1 |
-| TBT (ms) | 000 | 000 | X% | X% | X% | ≤ 200 ms |
+| Metriek | Gemiddelde | Goed | Verbetering nodig | Slecht | Drempelwaarde |
+|---------|------------|------|-------------------|--------|---------------|
+| LCP (ms) | 0000 | X% | X% | X% | ≤ 2500 ms |
+| CLS | 0,00 | X% | X% | X% | ≤ 0,1 |
+| TBT (ms) | 000 | X% | X% | X% | ≤ 200 ms |
 
 ---
 
@@ -72,7 +72,7 @@ De website van {bedrijfsnaam} scoort momenteel een {mediaan score} op performanc
 | Pagina | TTFB | FCP | Speed Index | TBT |
 |--------|------|-----|-------------|-----|
 | /pad/naar/pagina | XXX ms | XXXX ms | XXXX ms | XXX ms |
-| **Mediaan** | **XXX ms** | **XXXX ms** | **XXXX ms** | **XXX ms** |
+| **Gemiddelde** | **XXX ms** | **XXXX ms** | **XXXX ms** | **XXX ms** |
 
 ---
 
@@ -83,7 +83,7 @@ De website van {bedrijfsnaam} scoort momenteel een {mediaan score} op performanc
 | Gemiddeld paginagewicht | X,X MB |
 | Gemiddeld aantal verzoeken | XXX |
 
-> Waarden zijn medianen over alle geauditeerde pagina's. Paginagewicht is de gecomprimeerde
+> Waarden zijn gemiddelden over alle geauditeerde pagina's. Paginagewicht is de gecomprimeerde
 > (overgedragen) grootte; de ongecomprimeerde grootte is doorgaans 3–4× groter.
 
 ---
@@ -93,7 +93,7 @@ De website van {bedrijfsnaam} scoort momenteel een {mediaan score} op performanc
 | Pagina | Totaal | Scripts | Afbeeldingen | CSS | Lettertypen | Docs | Overig |
 |--------|--------|---------|--------------|-----|-------------|------|--------|
 | /pad | X,X MB (XXX vz) | X,X MB (XX) | XXX KB (XX) | XXX KB (X) | XXX KB (X) | XX KB (X) | XX KB (XX) |
-| **Mediaan** | **X,X MB** | **X,X MB** | **XXX KB** | **XXX KB** | **XXX KB** | **XX KB** | **XX KB** |
+| **Gemiddelde** | **X,X MB** | **X,X MB** | **XXX KB** | **XXX KB** | **XXX KB** | **XX KB** | **XX KB** |
 
 > Formaat: `{grootte} ({aantal} vz)`. Groottes zijn gecomprimeerd (overgedragen).
 > Verzoeken van derden worden meegeteld binnen hun resourcetype en apart bijgehouden
@@ -168,7 +168,6 @@ _(herhaal per pagina)_
 
 ## Aggregatieregels
 
-- **Mediaan**: middelste waarde na sortering; gemiddelde van de twee middelste waarden bij een even aantal
 - **Gemiddelde**: som / aantal
 - **Goed%**: (aantal in Goed-bereik / totaal pagina's met data) × 100, afgerond op geheel getal
 - Sluit `status: error` of null-metrieken uit van alle aggregaties

@@ -82,13 +82,13 @@ De website van {bedrijfsnaam} scoort momenteel een {gemiddelde score} op perform
 
 ---
 
-## Core Web Vitals per pagina
+## Statistieken per pagina
 
-| Pagina | Score | LCP | CLS | TBT | Status |
-|--------|-------|-----|-----|-----|--------|
-| /pad/naar/pagina | XX/100 | XXXX ms | 0,00 | XXX ms | Goed / Verbetering nodig / Slecht |
+| Pagina | Performance Score | LCP | CLS | TBT | Paginagewicht | Status |
+|--------|-------------------|-----|-----|-----|---------------|--------|
+| /pad/naar/pagina | XX/100 | XXXX ms | 0,00 | XXX ms | X,X MB | Goed / Verbetering nodig / Slecht |
 
-**Status** wordt bepaald door de performancescore: Goed ≥ 90, Verbetering nodig 50–89, Slecht < 50.
+**Status** wordt bepaald door de performancescore: Goed ≥ 90, Verbetering nodig 50–89, Slecht < 50. Zie [Lighthouse performance scoring](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring) voor een toelichting op de berekening van de score.
 
 ---
 

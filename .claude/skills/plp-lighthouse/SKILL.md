@@ -150,7 +150,7 @@ The report is written in **Dutch**. Follow the section order and Dutch headings 
 5. **Technische stack** — one row per detected value: CDN (from `cdn` field, first non-null across all URLs), Frontend framework (from `framework` field, first non-null). If all values are null for a field, show "Onbekend". Always include this section.
 6. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
 7. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
-8. **Core Web Vitals per pagina** — one row per page: Score, LCP, CLS, TBT, Bot-check, Status. Bot-check column: ✅ for `detected: false`, ⚠ + system name for `detected: true`.
+8. **Statistieken per pagina** — one row per page: Score, LCP, CLS, TBT, Paginagewicht (MB, 1 decimal, from `pageWeight_bytes ÷ 1048576`), Status. Add a note below the table referencing https://developer.chrome.com/docs/lighthouse/performance/performance-scoring for score methodology. No bot-check column.
 9. **Laadtijddetails** — per-page TTFB, FCP, Speed Index, TBT + median row
 10. **Paginagewicht** — median page weight and requests
 11. **Resourceverdeling per pagina** — per-page resource table (Total, Scripts, Images, CSS, Fonts, Docs, Other); use `resources.*` totals for all columns except Scripts — for Scripts show the aggregate count/bytes from `resources.scripts` with a note that the breakdown follows

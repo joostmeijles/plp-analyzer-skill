@@ -315,6 +315,130 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ── CDN detection ────────────────────────────────────────────────────────────
+
+/**
+ * Detects the CDN/hosting provider from HTTP response headers.
+ *
+ * Checks vendor-specific headers in priority order (most specific first).
+ * Returns a human-readable name (e.g. "Vercel", "Cloudflare") or null.
+ *
+ * @param {Response} response  Puppeteer HTTPResponse from page.goto()
+ * @returns {string|null}
+ */
+function detectCdn(response) {
+  if (!response) return null;
+  const headers = response.headers();
+  const h = (name) => (headers[name.toLowerCase()] || '').toLowerCase();
+  const server = h('server');
+
+  if (headers['x-vercel-id'] || server === 'vercel')                          return 'Vercel';
+  if (headers['cf-ray'] || server.includes('cloudflare'))                     return 'Cloudflare';
+  if (headers['x-amz-cf-id'] || headers['x-amz-cf-pop'])                     return 'AWS CloudFront';
+  if (headers['x-nf-request-id'] || server === 'netlify')                     return 'Netlify';
+  if (headers['x-akamai-request-id'] || headers['akamai-grn'] ||
+      server.includes('akamaighost') || server.includes('akamai'))            return 'Akamai';
+  if (h('x-served-by').includes('cache-') ||
+      h('via').includes('varnish') || server.includes('fastly'))              return 'Fastly';
+  if (headers['x-msedge-ref'] ||
+      server.includes('ecacc') || server.includes('ecd'))                     return 'Azure CDN';
+  if (headers['bunny-request-id'] || server.includes('bunnycdn'))             return 'BunnyCDN';
+  if (headers['x-sucuri-id'] || headers['x-sucuri-cache'])                   return 'Sucuri';
+  if (h('via').includes('google') || server.includes('gws') ||
+      Object.keys(headers).some(k => k.startsWith('x-goog-')))               return 'Google Cloud CDN';
+  if (server.includes('nginx') && headers['x-cache'])                        return 'nginx (CDN unknown)';
+
+  return null;
+}
+
+// ── Frontend framework detection ──────────────────────────────────────────────
+
+/**
+ * Detects the frontend framework by inspecting JavaScript globals and DOM markers
+ * that frameworks reliably inject into the page.
+ *
+ * Runs inside the browser context via page.evaluate().
+ * Returns a human-readable name (e.g. "Next.js", "Vue.js") or null.
+ *
+ * @param {Page} page  Puppeteer Page (after navigation and JS execution)
+ * @returns {Promise<string|null>}
+ */
+async function detectFramework(page) {
+  return page.evaluate(() => {
+    // Next.js — server-injects __NEXT_DATA__ script tag; _next/static in any script src
+    if (document.getElementById('__NEXT_DATA__') ||
+        document.querySelector('script[src*="/_next/static/"]') ||
+        typeof window.__NEXT_DATA__ !== 'undefined') {
+      return 'Next.js';
+    }
+
+    // Nuxt.js
+    if (typeof window.__NUXT__ !== 'undefined' ||
+        typeof window.__nuxt !== 'undefined' ||
+        document.getElementById('__nuxt') ||
+        document.getElementById('__layout')) {
+      return 'Nuxt.js';
+    }
+
+    // Gatsby
+    if (typeof window.___gatsby !== 'undefined' ||
+        document.getElementById('gatsby-focus-wrapper') ||
+        document.querySelector('link[as="script"][href*="gatsby-chunk"]')) {
+      return 'Gatsby';
+    }
+
+    // Remix
+    if (typeof window.__remixContext !== 'undefined' ||
+        typeof window.__remixRouteModules !== 'undefined') {
+      return 'Remix';
+    }
+
+    // SvelteKit
+    if (typeof window.__sveltekit_data !== 'undefined' ||
+        document.querySelector('[data-sveltekit-preload-data]')) {
+      return 'SvelteKit';
+    }
+
+    // Astro
+    if (document.documentElement.hasAttribute('data-astro-source-file') ||
+        document.querySelector('astro-island') ||
+        typeof window.Astro !== 'undefined') {
+      return 'Astro';
+    }
+
+    // Angular
+    if (document.querySelector('[ng-version]') ||
+        typeof window.getAllAngularRootElements !== 'undefined') {
+      return 'Angular';
+    }
+
+    // Shopify (before generic Vue/React — Shopify uses both)
+    if (typeof window.Shopify !== 'undefined') return 'Shopify';
+
+    // BigCommerce
+    if (typeof window.BCData !== 'undefined' ||
+        typeof window.bigcommerce !== 'undefined') {
+      return 'BigCommerce';
+    }
+
+    // Vue.js (generic, no meta-framework matched above)
+    const appEl = document.getElementById('app') || document.getElementById('__app');
+    if ((appEl && typeof appEl.__vue_app__ !== 'undefined') ||
+        typeof window.__vue_app__ !== 'undefined' ||
+        document.querySelector('[data-v-app]')) {
+      return 'Vue.js';
+    }
+
+    // React (generic)
+    if (document.querySelector('[data-reactroot]') ||
+        Object.keys(window).some(k => k.startsWith('__reactFiber') || k.startsWith('__reactProps'))) {
+      return 'React';
+    }
+
+    return null;
+  });
+}
+
 // ── Bot protection detection ──────────────────────────────────────────────────
 
 /**
@@ -457,6 +581,8 @@ async function auditUrl(url, browser, outputDir, sitename, index) {
   let screenshotPath = null;
   let cookieHeader = '';
   let botProtection = { detected: false, system: null, details: null };
+  let cdn = null;
+  let framework = null;
 
   const page = await browser.newPage();
   try {
@@ -481,6 +607,10 @@ async function auditUrl(url, browser, outputDir, sitename, index) {
         `  ⚠ Bot protection detected: ${botProtection.system} — ${botProtection.details}\n`
       );
     }
+
+    // Detect CDN from response headers and framework from page globals
+    cdn = detectCdn(response);
+    framework = await detectFramework(page);
 
     // Attempt banner dismissal (main frame + all iframes)
     cookieBanner = await dismissCookieBanner(page);
@@ -559,7 +689,7 @@ async function auditUrl(url, browser, outputDir, sitename, index) {
     scriptFiles,
   };
 
-  return { cookieBanner, botProtection, screenshotPath, metrics };
+  return { cookieBanner, botProtection, cdn, framework, screenshotPath, metrics };
 }
 
 // ── CLI entry point ───────────────────────────────────────────────────────────
@@ -614,11 +744,12 @@ async function main() {
       process.stderr.write(`[${i + 1}/${urls.length}] Auditing: ${url}\n`);
 
       try {
-        const { cookieBanner, botProtection, screenshotPath, metrics } = await auditUrl(url, browser, outputDir, sitename, i);
+        const { cookieBanner, botProtection, cdn, framework, screenshotPath, metrics } = await auditUrl(url, browser, outputDir, sitename, i);
         process.stderr.write(`  Cookie banner: ${cookieBanner}\n`);
         process.stderr.write(`  Bot protection: ${botProtection.detected ? `⚠ ${botProtection.system}` : 'none'}\n`);
+        process.stderr.write(`  CDN: ${cdn || 'unknown'} | Framework: ${framework || 'unknown'}\n`);
         process.stderr.write(`  Score: ${metrics.score} | LCP: ${metrics.lcp_ms}ms | TBT: ${metrics.tbt_ms}ms\n`);
-        results.push({ url, status: 'ok', cookieBanner, botProtection, screenshotPath, lighthouse: metrics });
+        results.push({ url, status: 'ok', cookieBanner, botProtection, cdn, framework, screenshotPath, lighthouse: metrics });
       } catch (err) {
         process.stderr.write(`  Error: ${err.message}\n`);
         results.push({ url, status: 'error', errorMessage: err.message, screenshotPath: null, lighthouse: null });

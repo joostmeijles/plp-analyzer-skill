@@ -47,6 +47,17 @@ De website van {bedrijfsnaam} scoort momenteel een {gemiddelde score} op perform
 
 ---
 
+## Technische stack
+
+| | Waarde |
+|--|--|
+| CDN / Hosting | {cdn} |
+| Frontend framework | {framework} |
+
+> CDN wordt bepaald op basis van HTTP-antwoordheaders (bijv. `cf-ray` → Cloudflare, `x-vercel-id` → Vercel, `x-amz-cf-id` → AWS CloudFront). Framework wordt bepaald op basis van JavaScript-globals en DOM-markers (bijv. `__NEXT_DATA__` → Next.js, `window.__NUXT__` → Nuxt.js). Toon "Onbekend" als geen van beide kon worden vastgesteld.
+
+---
+
 ## Core Web Vitals
 
 | Metriek | Gemiddelde | Goed | Verbetering nodig | Slecht | Drempelwaarde |

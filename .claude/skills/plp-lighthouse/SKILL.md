@@ -66,6 +66,8 @@ The tool outputs a JSON array to stdout. Each entry:
     "system": null,
     "details": null
   },
+  "cdn": "Vercel",
+  "framework": "Next.js",
   "screenshotPath": "temp/screenshot-sitename-0.png",
   "lighthouse": {
     "score": 62,
@@ -103,6 +105,8 @@ The tool outputs a JSON array to stdout. Each entry:
 - `scriptFiles` contains one entry per individual JS file loaded by the page (from the Lighthouse `network-requests` audit), sorted by size descending — use this to report individual bundle sizes rather than the aggregate `resources.scripts` total.
 - `botProtection.detected: true` means the Puppeteer navigation encountered a bot protection page. The Lighthouse metrics for that URL may be unreliable (reflecting the challenge page rather than the actual PLP). Flag these pages clearly in the report.
 - **`botProtection` is detected on the Puppeteer pre-navigation only** (before the banner dismissal). Lighthouse does its own fresh navigation — if the tool was blocked during Lighthouse's navigation the metrics will appear anomalously low (near-zero requests, very low page weight, tiny LCP). Cross-check: if `resources.total.requests < 10` and `pageWeight_bytes < 100000` the Lighthouse run was likely also blocked.
+- `cdn` is detected from HTTP response headers (e.g. `cf-ray` → Cloudflare, `x-vercel-id` → Vercel, `x-amz-cf-id` → AWS CloudFront). `null` means no known CDN header was found.
+- `framework` is detected from JavaScript globals and DOM markers injected by the framework (e.g. `__NEXT_DATA__` → Next.js, `window.__NUXT__` → Nuxt.js). `null` means no known framework marker was found. Both values are constant across all URLs of the same site — use the first non-null value for the site-level stack summary in the report.
 
 ---
 
@@ -142,7 +146,8 @@ The report is written in **Dutch**. Follow the section order and Dutch headings 
 1. **Managementsamenvatting** — fixed Dutch template (fill in sitename, mean score, mean LCP in seconds): "De website van [bedrijfsnaam] scoort momenteel een [score] op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ([x] sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet."
 2. **Samenvatting** — 3–5 Dutch sentences describing overall website health: mean performance score, mean LCP (incl. rating), mean TBT (incl. rating), mean CLS, page weight, and the most important bottleneck. If any pages had bot protection detected, mention it here.
 3. **Algemene gezondheid** — median Performance Score, median SEO Score, median page weight, pages analyzed
-4. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
+4. **Technische stack** — one row per detected value: CDN (from `cdn` field, first non-null across all URLs), Frontend framework (from `framework` field, first non-null). If all values are null for a field, show "Onbekend". Always include this section.
+5. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
 5. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
 6. **Core Web Vitals per pagina** — one row per page: Score, LCP, CLS, TBT, Bot-check, Status. Bot-check column: ✅ for `detected: false`, ⚠ + system name for `detected: true`.
 7. **Laadtijddetails** — per-page TTFB, FCP, Speed Index, TBT + median row

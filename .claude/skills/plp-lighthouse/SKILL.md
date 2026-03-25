@@ -40,7 +40,7 @@ cd tools && npm install
 ## Phase 2: Setup
 
 ```bash
-cd tools && npm install --silent
+cd ./claude/tools && npm install --silent
 ```
 
 ---
@@ -48,7 +48,7 @@ cd tools && npm install --silent
 ## Phase 3: Run the Puppeteer Lighthouse Tool
 
 ```bash
-node tools/lighthouse-runner.js \
+node ./claude/tools/lighthouse-runner.js \
   "{url1}" "{url2}" ... \
   --output-dir="temp" \
   --sitename="{sitename}"
@@ -144,17 +144,18 @@ Follow the structure defined in `references/report-format.md` exactly:
 The report is written in **Dutch**. Follow the section order and Dutch headings defined in `references/report-format.md` exactly:
 
 1. **Managementsamenvatting** — fixed Dutch template (fill in sitename, mean score, mean LCP in seconds): "De website van [bedrijfsnaam] scoort momenteel een [score] op performance. Dit betekent dat pagina's voor bezoekers merkbaar traag laden ([x] sec) en niet altijd direct reageren. Deze vertragingen doorbreken de flow, zorgen voor frustratie en vergroten de kans dat bezoekers afhaken. Als je één ding moet weten: de huidige ervaring kost direct conversie en omzet."
-2. **Samenvatting** — 3–5 Dutch sentences describing overall website health: mean performance score, mean LCP (incl. rating), mean TBT (incl. rating), mean CLS, page weight, and the most important bottleneck. If any pages had bot protection detected, mention it here.
-3. **Algemene gezondheid** — median Performance Score, median SEO Score, median page weight, pages analyzed
-4. **Technische stack** — one row per detected value: CDN (from `cdn` field, first non-null across all URLs), Frontend framework (from `framework` field, first non-null). If all values are null for a field, show "Onbekend". Always include this section.
-5. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
-5. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
-6. **Core Web Vitals per pagina** — one row per page: Score, LCP, CLS, TBT, Bot-check, Status. Bot-check column: ✅ for `detected: false`, ⚠ + system name for `detected: true`.
-7. **Laadtijddetails** — per-page TTFB, FCP, Speed Index, TBT + median row
-8. **Paginagewicht** — median page weight and requests
-9. **Resourceverdeling per pagina** — per-page resource table (Total, Scripts, Images, CSS, Fonts, Docs, Other); use `resources.*` totals for all columns except Scripts — for Scripts show the aggregate count/bytes from `resources.scripts` with a note that the breakdown follows
-10. **JavaScript-bestanden per pagina** — for each page, list the individual JS files from `scriptFiles` (URL shortened to filename or domain, size in KB); show top 10 per page sorted by size descending; include a column for first-party vs third-party (third-party = different origin than the audited URL)
-11. **Aanbevelingen** — Hoge prioriteit and Gemiddelde prioriteit, derived from the worst metrics
+2. **Aanbevelingssamenvatting** — exactly two recommendations, each max 550 **characters** (not words), written for a management audience (no unexplained technical jargon). Select the two issues with the greatest combined business impact, derived from the worst-scoring metrics across all audited pages. For each recommendation follow this structure: (a) the problem in plain language, (b) how it affects the visitor experience (load time, frustration, abandonment), (c) the direct business impact (conversion, revenue, discoverability), (d) the concrete action the development team must take, (e) expected improvement in performance score or LCP if quantifiable. Rank by impact: prioritise LCP > TBT > CLS > page weight > third-party scripts, unless another metric is clearly the dominant outlier. Keep the text extremely concise — 550 characters is roughly 3–4 short sentences.
+3. **Samenvatting** — 3–5 Dutch sentences describing overall website health: mean performance score, mean LCP (incl. rating), mean TBT (incl. rating), mean CLS, page weight, and the most important bottleneck. If any pages had bot protection detected, mention it here.
+4. **Algemene gezondheid** — median Performance Score, median SEO Score, median page weight, pages analyzed
+5. **Technische stack** — one row per detected value: CDN (from `cdn` field, first non-null across all URLs), Frontend framework (from `framework` field, first non-null). If all values are null for a field, show "Onbekend". Always include this section.
+6. **⚠ Botbeveiliging (conditional)** — include this section only if `botProtection.detected === true` for at least one URL. Table with columns: Pagina | Systeem | Details | Maatregel. Maatregel = "Resultaten mogelijk onbetrouwbaar — controleer screenshot". Add a note: "Lighthouse-metrieken voor geblokkeerde pagina's kunnen de challenge-pagina weerspiegelen in plaats van de daadwerkelijke PLP." Omit this section entirely if no bot protection was detected.
+7. **Core Web Vitals** — LCP, CLS, and TBT summary table with pass rates
+8. **Core Web Vitals per pagina** — one row per page: Score, LCP, CLS, TBT, Bot-check, Status. Bot-check column: ✅ for `detected: false`, ⚠ + system name for `detected: true`.
+9. **Laadtijddetails** — per-page TTFB, FCP, Speed Index, TBT + median row
+10. **Paginagewicht** — median page weight and requests
+11. **Resourceverdeling per pagina** — per-page resource table (Total, Scripts, Images, CSS, Fonts, Docs, Other); use `resources.*` totals for all columns except Scripts — for Scripts show the aggregate count/bytes from `resources.scripts` with a note that the breakdown follows
+12. **JavaScript-bestanden per pagina** — for each page, list the individual JS files from `scriptFiles` (URL shortened to filename or domain, size in KB); show top 10 per page sorted by size descending; include a column for first-party vs third-party (third-party = different origin than the audited URL)
+13. **Aanbevelingen** — Hoge prioriteit and Gemiddelde prioriteit, derived from the worst metrics
 
 After writing, print:
 `Rapport opgeslagen als {filePath}. {N} URL's geaudit ({errors} fouten). Gemiddelde performancescore: {value}, Gemiddeld LCP: {value}ms.`

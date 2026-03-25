@@ -27,6 +27,20 @@ De website van {bedrijfsnaam} scoort momenteel een {gemiddelde score} op perform
 
 ---
 
+## Aanbevelingssamenvatting
+
+> De twee meest impactvolle verbeteringen, toegelicht voor management. Elke aanbeveling beschrijft wat het probleem is, waarom het er toe doet voor de business, en wat de aanbevolen actie is — zonder technisch jargon. Maximaal 550 tekens per aanbeveling.
+
+### Aanbeveling 1: {titel}
+
+{Management-gerichte toelichting van maximaal 550 tekens. Beschrijf: (1) wat het probleem is in begrijpelijke taal, (2) welk meetbaar effect dit heeft op de bezoeker (laadtijd, frustratie, verlaten pagina), (3) de directe zakelijke impact (conversie, omzet, vindbaarheid), en (4) de concrete actie die het ontwikkelteam moet uitvoeren. Geen code, geen technische afkortingen die niet worden uitgelegd. Sluit af met een verwachte verbetering in performancescore of LCP indien kwantificeerbaar.}
+
+### Aanbeveling 2: {titel}
+
+{Management-gerichte toelichting van maximaal 550 tekens. Zelfde structuur als Aanbeveling 1.}
+
+---
+
 ## Samenvatting
 
 {3–5 Nederlandstalige zinnen die de algehele websitegesteldheid beschrijven. Vermeld ten minste: de gemiddelde performancescore, het gemiddelde LCP (inclusief beoordeling Goed/Verbetering nodig/Slecht), het gemiddelde TBT (inclusief beoordeling), het gemiddelde CLS, het paginagewicht, en het belangrijkste knelpunt dat als eerste aangepakt moet worden. Schrijf zakelijk en bondig.}

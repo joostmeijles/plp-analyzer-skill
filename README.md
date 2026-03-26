@@ -1,3 +1,6 @@
+# Prerequisites
+* Claude Code
+
 # How to use
 
 ## Find PLPs

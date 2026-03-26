@@ -49,15 +49,16 @@ De website van {bedrijfsnaam} scoort momenteel een {gemiddelde score} op perform
 
 ## Algemene gezondheid
 
-| | Waarde |
-|--|--|
-| Performancescore | XX/100 |
-| Vindbaarheidscore (SEO) | XX/100 |
-| Gemiddeld paginagewicht | X,X MB |
-| Geanalyseerde pagina's | N |
+| | Waarde | Status |
+|--|--|--|
+| Performancescore | XX/100 | 🔴 Slecht / 🟠 Verbetering nodig / 🟢 Goed |
+| Vindbaarheidscore (SEO) | XX/100 | 🔴 Slecht / 🟠 Verbetering nodig / 🟢 Goed |
+| Gemiddeld paginagewicht | X,X MB | |
+| Geanalyseerde pagina's | N | |
 
 > Scores zijn het **gemiddelde** over alle geauditeerde pagina's. Paginagewicht is de gecomprimeerde
 > (overgedragen) grootte zoals gerapporteerd door Lighthouse.
+> Status: 🟢 Goed ≥ 90 · 🟠 Verbetering nodig 50–89 · 🔴 Slecht < 50
 
 ---
 

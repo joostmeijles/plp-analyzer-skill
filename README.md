@@ -1,5 +1,6 @@
 # Prerequisites
 * Claude Code
+* NodeJS
 
 # How to use
 
